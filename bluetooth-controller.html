@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
+    <title>Domaah Micro:Bit versi 1.0</title>
+    <link rel="icon" type="image/png" href="domaah-logo.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
+
+    <style>
+        /* ============================================================
+           ROOT
+           ============================================================ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+        }
+        *::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+
+        :root {
+            --bg: #07090e;
+            --surface: rgba(255, 255, 255, 0.045);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.14);
+            --text: #f0f0f7;
+            --text-secondary: rgba(255, 255, 255, 0.5);
+            --text-tertiary: rgba(255, 255, 255, 0.28);
+            --blue: #4f9cf7;
+            --blue-glow: rgba(79, 156, 247, 0.3);
+            --green: #34d399;
+            --green-glow: rgba(52, 211, 153, 0.3);
+            --red: #f87171;
+            --red-glow: rgba(248, 113, 113, 0.3);
+            --purple: #a78bfa;
+            --purple-glow: rgba(167, 139, 250, 0.25);
+            --teal: #2dd4bf;
+            --teal-glow: rgba(45, 212, 191, 0.25);
+            --amber: #fbbf24;
+            --amber-glow: rgba(251, 191, 36, 0.25);
+            --radius: 18px;
+            --radius-sm: 10px;
+            --shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+            --transition: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            --nav-width: 250px;
+            --header-h: 64px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* -------- LIGHT -------- */
+        body.theme-light {
+            --bg: #eef0f6;
+            --surface: rgba(255, 255, 255, 0.7);
+            --surface-hover: rgba(255, 255, 255, 0.92);
+            --border: rgba(0, 0, 0, 0.05);
+            --border-hover: rgba(0, 0, 0, 0.12);
+            --text: #1a1a2e;
+            --text-secondary: rgba(0, 0, 0, 0.5);
+            --text-tertiary: rgba(0, 0, 0, 0.3);
+            --blue: #3b82f6;
+            --blue-glow: rgba(59, 130, 246, 0.18);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.18);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.18);
+            --purple: #8b5cf6;
+            --purple-glow: rgba(139, 92, 246, 0.18);
+            --teal: #14b8a6;
+            --teal-glow: rgba(20, 184, 166, 0.18);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.18);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+
+        /* -------- CONTRAST -------- */
+        body.theme-contrast {
+            --bg: #000;
+            --surface: #0a0a0a;
+            --surface-hover: #1a1a1a;
+            --border: #ff0;
+            --border-hover: #ff0;
+            --text: #ff0;
+            --text-secondary: #0ff;
+            --text-tertiary: rgba(0, 255, 255, 0.5);
+            --blue: #0ff;
+            --blue-glow: rgba(0, 255, 255, 0.3);
+            --green: #0f0;
+            --green-glow: rgba(0, 255, 0, 0.3);
+            --red: #f00;
+            --red-glow: rgba(255, 0, 0, 0.3);
+            --purple: #f0f;
+            --purple-glow: rgba(255, 0, 255, 0.3);
+            --teal: #0ff;
+            --teal-glow: rgba(0, 255, 255, 0.3);
+            --amber: #ff0;
+            --amber-glow: rgba(255, 255, 0, 0.3);
+            --shadow: 0 0 30px rgba(255, 255, 0, 0.08);
+            --radius: 12px;
+        }
+
+        /* ============================================================
+           AMBIENT CANVAS
+           ============================================================ */
+        #ambientCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        body.theme-light #ambientCanvas {
+            opacity: 0.2;
+        }
+        body.theme-contrast #ambientCanvas {
+            opacity: 0.08;
+        }
+
+        /* ============================================================
+           LOADING OVERLAY
+           ============================================================ */
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.7s ease, visibility 0.7s ease;
+            pointer-events: none;
+        }
+        #loadingOverlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .loader-ring {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 28px;
+        }
+        .loader-ring .ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            animation: spinRing 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        }
+        .loader-ring .ring:nth-child(1) {
+            border-top-color: var(--blue);
+            animation-duration: 2s;
+        }
+        .loader-ring .ring:nth-child(2) {
+            border-right-color: var(--purple);
+            animation-duration: 2.8s;
+            animation-direction: reverse;
+        }
+        .loader-ring .ring:nth-child(3) {
+            border-bottom-color: var(--teal);
+            animation-duration: 3.6s;
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+        }
+        .loader-ring .ring:nth-child(4) {
+            border-left-color: var(--amber);
+            animation-duration: 4.2s;
+            width: 50%;
+            height: 50%;
+            top: 25%;
+            left: 25%;
+        }
+        @keyframes spinRing {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+            50% {
+                transform: rotate(180deg) scale(1.08);
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        .microbit-3d-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(30deg) rotateY(0deg);
+            width: 100px;
+            height: 130px;
+            transform-style: preserve-3d;
+            animation: floatBit 3s ease-in-out infinite;
+        }
+        .microbit-3d-loader .board {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, #0b1a2e, #1a3a5a);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 40px rgba(79, 156, 247, 0.15);
+            padding: 10px 12px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .microbit-3d-loader .board .led-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            width: 80%;
+            aspect-ratio: 5/5;
+            margin-bottom: 10px;
+        }
+        .microbit-3d-loader .board .led-grid .led {
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            transition: all 0.15s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        .microbit-3d-loader .board .led-grid .led.on {
+            background: #ff4444;
+            box-shadow: 0 0 12px #ff444488, 0 0 24px #ff444433;
+        }
+        .microbit-3d-loader .board .led-grid .led.on.green {
+            background: #44ff88;
+            box-shadow: 0 0 12px #44ff8877, 0 0 24px #44ff8833;
+        }
+        .microbit-3d-loader .board .led-grid .led.on.blue {
+            background: #4488ff;
+            box-shadow: 0 0 12px #4488ff77, 0 0 24px #4488ff33;
+        }
+        .microbit-3d-loader .board .btn-row {
+            display: flex;
+            gap: 20px;
+            width: 80%;
+            justify-content: center;
+            margin-top: 2px;
+        }
+        .microbit-3d-loader .board .btn-row .btn-bit {
+            width: 28px;
+            height: 10px;
+            border-radius: 6px 6px 2px 2px;
+            background: linear-gradient(180deg, #2a4a6a, #0a1a2a);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .microbit-3d-loader .board .pins {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            width: 85%;
+            justify-content: center;
+        }
+        .microbit-3d-loader .board .pins span {
+            width: 6px;
+            height: 14px;
+            background: linear-gradient(180deg, #8a7a5a, #5a4a2a);
+            border-radius: 1px 1px 3px 3px;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08);
+        }
+        @keyframes floatBit {
+            0%,
+            100% {
+                transform: translate(-50%, -50%) rotateX(30deg) rotateY(0deg) translateY(0);
+            }
+            50% {
+                transform: translate(-50%, -50%) rotateX(30deg) rotateY(25deg) translateY(-8px);
+            }
+        }
+
+        .loader-text {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 6px;
+            text-align: center;
+            padding: 0 20px;
+            background: linear-gradient(90deg, var(--blue), var(--purple), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 8px;
+            animation: shimmerText 2.4s ease-in-out infinite;
+        }
+        @keyframes shimmerText {
+            0%,
+            100% {
+                filter: brightness(0.8);
+            }
+            50% {
+                filter: brightness(1.4);
+            }
+        }
+        .loader-progress {
+            width: 200px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+        .loader-progress .bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--blue), var(--purple), var(--teal));
+            background-size: 200% 100%;
+            animation: progressSweep 2.8s ease-in-out infinite;
+            transition: width 0.3s ease;
+        }
+        @keyframes progressSweep {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .loader-percent {
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .loader-sub {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 14px;
+            letter-spacing: 1px;
+            text-align: center;
+            padding: 0 20px;
+            animation: pulseSub 2s ease-in-out infinite;
+        }
+        @keyframes pulseSub {
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ============================================================
+           CONNECTION OVERLAY
+           ============================================================ */
+        #connectOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99998;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+            pointer-events: none;
+        }
+        #connectOverlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        #connectOverlay .bit-wrap {
+            position: relative;
+            width: 180px;
+            height: 220px;
+            perspective: 800px;
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: floatConnect 2.8s ease-in-out infinite;
+        }
+        @keyframes floatConnect {
+            0%,
+            100% {
+                transform: rotateX(20deg) rotateY(0deg) translateY(0);
+            }
+            50% {
+                transform: rotateX(20deg) rotateY(30deg) translateY(-12px);
+            }
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, #0b1a2e, #1a3a5a);
+            border-radius: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 60px rgba(79, 156, 247, 0.12);
+            padding: 14px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c .led-grid-c {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            width: 78%;
+            aspect-ratio: 5/5;
+            margin-bottom: 12px;
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c .led-grid-c .led-c {
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            transition: all 0.15s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c .led-grid-c .led-c.on {
+            background: #44ff88;
+            box-shadow: 0 0 16px #44ff8877, 0 0 40px #44ff8833;
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c .led-grid-c .led-c.on.blue {
+            background: #4488ff;
+            box-shadow: 0 0 16px #4488ff77, 0 0 40px #4488ff33;
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c .btn-row-c {
+            display: flex;
+            gap: 24px;
+        }
+        #connectOverlay .bit-wrap .microbit-3d-connect .board-c .btn-row-c span {
+            width: 30px;
+            height: 10px;
+            border-radius: 6px 6px 2px 2px;
+            background: linear-gradient(180deg, #2a4a6a, #0a1a2a);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #connectOverlay .conn-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 280px;
+            height: 280px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(79, 156, 247, 0.12);
+            animation: ringPulse 2.4s ease-out infinite;
+            pointer-events: none;
+        }
+        #connectOverlay .conn-ring:nth-of-type(2) {
+            width: 340px;
+            height: 340px;
+            animation-delay: 0.8s;
+            border-color: rgba(167, 139, 250, 0.08);
+        }
+        #connectOverlay .conn-ring:nth-of-type(3) {
+            width: 400px;
+            height: 400px;
+            animation-delay: 1.6s;
+            border-color: rgba(45, 212, 191, 0.06);
+        }
+        @keyframes ringPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        #connectOverlay .conn-text {
+            margin-top: 40px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            animation: pulseSub 1.8s ease-in-out infinite;
+        }
+        #connectOverlay .conn-sub {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            letter-spacing: 1px;
+        }
+
+        /* ============================================================
+           APP CONTAINER
+           ============================================================ */
+        #app {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        #app.visible {
+            opacity: 1;
+        }
+
+        /* ============================================================
+           SIDEBAR (desktop always visible, mobile hidden)
+           ============================================================ */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--nav-width);
+            background: var(--surface);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-right: 1px solid var(--border);
+            padding: 28px 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 100;
+            transform: translateX(0);
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                background 0.4s ease, border-color 0.4s ease;
+            box-shadow: 6px 0 40px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+        /* Desktop: always visible */
+        @media (min-width: 821px) {
+            nav {
+                transform: translateX(0) !important;
+            }
+            .app-header {
+                display: none !important;
+            }
+        }
+        /* Mobile: hidden behind hamburger */
+        @media (max-width: 820px) {
+            nav {
+                top: var(--header-h);
+                transform: translateX(-100%);
+                padding-top: 16px;
+                border-radius: 0 20px 20px 0;
+                box-shadow: 8px 0 60px rgba(0, 0, 0, 0.5);
+            }
+            nav.open {
+                transform: translateX(0);
+            }
+            .app-header {
+                display: flex;
+            }
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .nav-brand svg {
+            width: 28px;
+            height: 28px;
+            fill: none;
+            stroke: var(--blue);
+            stroke-width: 2.2;
+            -webkit-text-fill-color: initial;
+            flex-shrink: 0;
+        }
+        .nav-brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .nav-brand-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+        }
+        .nav-brand-version {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            letter-spacing: 0.5px;
+        }
+        .nav-back-home {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition);
+            flex-shrink: 0;
+        }
+        .nav-back-home:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+            border-color: var(--border-hover);
+        }
+        .nav-back-home svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .nav-status {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .nav-status .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 12px var(--red-glow);
+            transition: all 0.4s ease;
+            flex-shrink: 0;
+        }
+        .nav-status .dot.connected {
+            background: var(--green);
+            box-shadow: 0 0 16px var(--green-glow);
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,
+            100% {
+                box-shadow: 0 0 8px var(--green-glow);
+            }
+            50% {
+                box-shadow: 0 0 28px var(--green-glow);
+            }
+        }
+        .nav-status .time {
+            margin-left: auto;
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            margin-top: 4px;
+        }
+        .nav-links li {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            position: relative;
+            user-select: none;
+            letter-spacing: 0.2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-links li .nav-icon {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity var(--transition);
+        }
+        .nav-links li:hover .nav-icon {
+            opacity: 1;
+        }
+        .nav-links li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            width: 3px;
+            height: 60%;
+            background: var(--blue);
+            border-radius: 0 4px 4px 0;
+            transform: scaleY(0);
+            transition: transform var(--transition);
+        }
+        .nav-links li:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+            transform: translateX(3px);
+        }
+        .nav-links li:hover::before {
+            transform: scaleY(0.5);
+        }
+        .nav-links li.active {
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 20px var(--blue-glow);
+            transform: translateX(0);
+        }
+        .nav-links li.active::before {
+            transform: scaleY(1);
+            background: rgba(255, 255, 255, 0.6);
+        }
+        .nav-links li.active .nav-icon {
+            opacity: 1;
+            stroke: #fff;
+        }
+
+        .nav-connect {
+            padding: 14px 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 4px 24px var(--blue-glow);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        .nav-connect::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .nav-connect:hover::after {
+            opacity: 1;
+        }
+        .nav-connect:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 32px var(--blue-glow);
+        }
+        .nav-connect:active {
+            transform: scale(0.96);
+        }
+        .nav-connect.disconnect {
+            background: linear-gradient(135deg, var(--red), #dc2626);
+            box-shadow: 0 4px 24px var(--red-glow);
+        }
+        .nav-connect.disconnect:hover {
+            box-shadow: 0 8px 32px var(--red-glow);
+        }
+
+        /* ============================================================
+           HEADER (mobile only)
+           ============================================================ */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-h);
+            z-index: 50;
+            background: var(--surface);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.4s ease;
+        }
+        .app-header .hamburger {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            padding: 6px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+        .app-header .hamburger:hover {
+            background: var(--surface-hover);
+        }
+        .app-header .hamburger span {
+            display: block;
+            height: 2px;
+            background: var(--text);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .app-header .hamburger.open span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        .app-header .hamburger.open span:nth-child(2) {
+            opacity: 0;
+        }
+        .app-header .hamburger.open span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+        .app-header .header-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.2px;
+        }
+        .app-header .header-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .app-header .header-status .dot-sm {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+            transition: all 0.3s ease;
+        }
+        .app-header .header-status .dot-sm.connected {
+            background: var(--green);
+            box-shadow: 0 0 14px var(--green-glow);
+        }
+
+        /* ============================================================
+           MAIN CONTENT
+           ============================================================ */
+        main {
+            flex: 1;
+            margin-left: var(--nav-width);
+            padding: 32px 36px;
+            overflow-y: auto;
+            height: 100vh;
+            transition: margin-left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                padding 0.3s ease;
+        }
+
+        @media (max-width: 820px) {
+            main {
+                margin-left: 0;
+                padding: 80px 16px 24px;
+            }
+        }
+        @media (max-width: 480px) {
+            main {
+                padding: 72px 12px 16px;
+            }
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================================
+           DASHBOARD
+           ============================================================ */
+        .dash-start {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            gap: 20px;
+        }
+        .dash-start h1 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .dash-start .sub {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+        .dash-start .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .dash-start .cards .pick {
+            padding: 22px 34px;
+            border-radius: var(--radius);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            min-width: 190px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .dash-start .cards .pick .pick-icon {
+            width: 40px;
+            height: 40px;
+            fill: none;
+            stroke: var(--blue);
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .dash-start .cards .pick:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: var(--shadow);
+        }
+        .dash-start .cards .pick:active {
+            transform: scale(0.96);
+        }
+        @media (max-width: 480px) {
+            .dash-start h1 {
+                font-size: 1.8rem;
+            }
+            .dash-start .cards .pick {
+                min-width: 100%;
+                padding: 16px 20px;
+                font-size: 0.85rem;
+            }
+            .dash-start .cards .pick .pick-icon {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        .dash-work {
+            display: none;
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .dash-work .bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .dash-work .bar h2 {
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: -0.3px;
+        }
+        .dash-work .bar .back-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dash-work .bar .back-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+        .dash-work .bar .back-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .dash-grid .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-grid .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+            pointer-events: none;
+        }
+        .dash-grid .card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+        }
+        .dash-grid .card h3 {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .dash-grid .card .metric {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .dash-grid .card .chart-wrap {
+            height: 100px;
+            margin-top: 12px;
+        }
+
+        /* Robot card full width */
+        .dash-grid .card-full {
+            grid-column: 1 / -1;
+        }
+
+        /* D-pad */
+        .dpad-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 8px 0;
+        }
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 74px);
+            grid-template-rows: repeat(3, 74px);
+            gap: 10px;
+            margin: 10px 0 18px;
+        }
+        @media (max-width: 480px) {
+            .dpad {
+                grid-template-columns: repeat(3, 56px);
+                grid-template-rows: repeat(3, 56px);
+                gap: 8px;
+            }
+        }
+        .dpad .btn-d {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            position: relative;
+            overflow: hidden;
+        }
+        .dpad .btn-d:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+        .dpad .btn-d:active {
+            background: var(--blue);
+            transform: scale(0.86);
+            box-shadow: 0 2px 20px var(--blue-glow);
+            border-color: transparent;
+        }
+        .dpad .btn-d svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--text);
+            transition: all 0.2s ease;
+        }
+        @media (max-width: 480px) {
+            .dpad .btn-d svg {
+                width: 26px;
+                height: 26px;
+            }
+        }
+        .dpad .btn-d:active svg {
+            fill: #fff;
+            transform: scale(0.85);
+        }
+        .dpad .btn-up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        .dpad .btn-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        .dpad .btn-center {
+            grid-column: 2;
+            grid-row: 2;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.035);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        .dpad .btn-center:active {
+            background: var(--amber);
+            box-shadow: 0 2px 24px var(--amber-glow);
+        }
+        .dpad .btn-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        .dpad .btn-down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .slider-group {
+            width: 100%;
+            max-width: 440px;
+            margin-top: 4px;
+        }
+        .slider-group label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .slider-group input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            outline: none;
+            margin: 6px 0 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--blue);
+            cursor: pointer;
+            box-shadow: 0 2px 14px var(--blue-glow), 0 0 0 4px rgba(255, 255, 255, 0.04);
+            transition: all 0.3s ease;
+            border: none;
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--blue);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 14px var(--blue-glow);
+        }
+
+        /* ============================================================
+           LOG
+           ============================================================ */
+        .log-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            height: calc(100vh - 230px);
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            line-height: 1.8;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all var(--transition);
+        }
+        @media (max-width: 820px) {
+            .log-box {
+                height: calc(100vh - 260px);
+            }
+        }
+        .log-box .entry {
+            padding: 2px 4px;
+            border-radius: 4px;
+            animation: fadeUp 0.25s ease;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        .log-box .entry:hover {
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 10px;
+        }
+        .log-box .entry.tx {
+            color: var(--blue);
+        }
+        .log-box .entry.rx {
+            color: var(--green);
+        }
+        .log-box .entry.err {
+            color: var(--red);
+        }
+        .log-box .entry.sys {
+            color: var(--purple);
+        }
+
+        .log-toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .log-toolbar .btn-sm {
+            padding: 8px 18px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .log-toolbar .btn-sm:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================
+           SETTINGS
+           ============================================================ */
+        .settings-group {
+            max-width: 500px;
+        }
+        .settings-group .field {
+            margin-bottom: 28px;
+        }
+        .settings-group .field label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            letter-spacing: 0.2px;
+        }
+        .settings-group .field select {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.35)' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            padding-right: 48px;
+        }
+        .settings-group .field select:hover {
+            border-color: var(--border-hover);
+            background-color: var(--surface-hover);
+        }
+        .settings-group .field select:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-glow);
+        }
+
+        /* ============================================================
+           HELP / DEV
+           ============================================================ */
+        .help-list {
+            list-style: none;
+            line-height: 2.6;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            padding-left: 0;
+        }
+        .help-list li {
+            padding: 4px 0;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border);
+        }
+        .help-list li:hover {
+            color: var(--text);
+            transform: translateX(4px);
+        }
+        .help-list li strong {
+            color: var(--text);
+        }
+
+        .dev-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            max-width: 500px;
+            transition: all var(--transition);
+        }
+        .dev-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+        .dev-card a {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .dev-card a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--blue);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+        .dev-card a:hover::after {
+            width: 100%;
+        }
+        .dev-card ul {
+            list-style: none;
+            line-height: 2.8;
+        }
+        .dev-card ul li {
+            border-bottom: 1px solid var(--border);
+            padding: 4px 0;
+        }
+        .dev-card ul li:last-child {
+            border-bottom: none;
+        }
+        .dev-card .dev-icon {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: var(--text-secondary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        /* ============================================================
+           RESPONSIVE - desktop adjustments
+           ============================================================ */
+        @media (min-width: 1200px) {
+            .dash-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dash-grid .card-full {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 1024px) and (min-width: 821px) {
+            .dash-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .dash-grid .card-full {
+                grid-column: 1 / -1;
+            }
+            main {
+                padding: 24px 20px;
+            }
+        }
+
+        /* ============================================================
+           UTILITY
+           ============================================================ */
+        .hidden {
+            display: none !important;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    AMBIENT CANVAS
+    ============================================================ -->
+    <canvas id="ambientCanvas"></canvas>
+
+    <!-- ============================================================
+    LOADING OVERLAY
+    ============================================================ -->
+    <div id="loadingOverlay" class="active">
+        <div class="loader-ring">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="microbit-3d-loader" id="loaderMicrobit">
+                <div class="board">
+                    <div class="led-grid" id="loaderGrid"></div>
+                    <div class="btn-row">
+                        <div class="btn-bit"></div>
+                        <div class="btn-bit"></div>
+                    </div>
+                    <div class="pins">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="loader-text" id="loaderTitle">MERENDER WEBSITE</div>
+        <div class="loader-progress"><div class="bar" id="loaderBar" style="width:0%"></div></div>
+        <div class="loader-percent" id="loaderPercent">0%</div>
+        <div class="loader-sub" id="loaderSub">Mencari Micro:bit...</div>
+    </div>
+
+    <!-- ============================================================
+    CONNECTION OVERLAY
+    ============================================================ -->
+    <div id="connectOverlay">
+        <div class="bit-wrap">
+            <div class="conn-ring"></div>
+            <div class="conn-ring"></div>
+            <div class="conn-ring"></div>
+            <div class="microbit-3d-connect" id="connectMicrobit">
+                <div class="board-c">
+                    <div class="led-grid-c" id="connectGrid"></div>
+                    <div class="btn-row-c">
+                        <span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="conn-text" id="connText">MENGHUBUNGKAN</div>
+        <div class="conn-sub" id="connSub">Mencari perangkat Micro:bit...</div>
+    </div>
+
+    <!-- ============================================================
+    APP
+    ============================================================ -->
+    <div id="app">
+
+        <!-- HEADER (mobile only) -->
+        <header class="app-header" id="appHeader">
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <span class="header-title">Domaah Micro:Bit</span>
+            <div class="header-status">
+                <span class="dot-sm" id="headerDot"></span>
+                <span id="headerStatusText">Offline</span>
+            </div>
+        </header>
+
+        <!-- SIDEBAR -->
+        <nav id="sidebar">
+            <div class="nav-brand">
+                <svg viewBox="0 0 24 24" stroke-linejoin="round" stroke-linecap="round">
+                    <rect x="2" y="2" width="20" height="20" rx="4" />
+                    <circle cx="8" cy="8" r="2" fill="currentColor" stroke="none" />
+                    <circle cx="16" cy="8" r="2" fill="currentColor" stroke="none" />
+                    <circle cx="8" cy="16" r="2" fill="currentColor" stroke="none" />
+                    <circle cx="16" cy="16" r="2" fill="currentColor" stroke="none" />
+                    <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+                </svg>
+                <div class="nav-brand-text">
+                    <span class="nav-brand-title">Domaah Micro:Bit</span>
+                    <span class="nav-brand-version">Version 1.0</span>
+                </div>
+            </div>
+
+            <a href="index.html" class="nav-back-home">
+                <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h5v-6h2v6h5a1 1 0 0 0 1-1V10"/></svg>
+                Back to Home
+            </a>
+
+            <div class="nav-status">
+                <span class="dot" id="navDot"></span>
+                <span id="navStatusText" data-i18n="disconnected">Terputus</span>
+                <span class="time" id="navTime">--:--:--</span>
+            </div>
+
+            <ul class="nav-links" id="navLinks">
+                <li class="active" data-tab="dashboard">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <span data-i18n="menu_dashboard">Dashboard</span>
+                </li>
+                <li data-tab="log">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h6"/><path d="M8 16h4"/></svg>
+                    <span data-i18n="menu_log">Log</span>
+                </li>
+                <li data-tab="settings">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span data-i18n="menu_settings">Setting</span>
+                </li>
+                <li data-tab="help">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                    <span data-i18n="menu_help">Help</span>
+                </li>
+                <li data-tab="developer">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 1 0 1.4l-1.6 1.6a1 1 0 0 0 1.4 1.4l2.2-2.2a1 1 0 0 0 0-1.4l-2.2-2.2a1 1 0 0 0-1.4 0z"/><path d="M9.3 6.3a1 1 0 0 0-1.4 0l-2.2 2.2a1 1 0 0 0 0 1.4l2.2 2.2a1 1 0 0 0 1.4-1.4L8.1 10l1.6-1.6a1 1 0 0 0-.4-2.1z"/><path d="M12 4v16"/></svg>
+                    <span data-i18n="menu_developer">Developer</span>
+                </li>
+            </ul>
+
+            <button class="nav-connect" id="connectBtn" data-i18n="btn_connect">Hubungkan Bluetooth</button>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main id="mainContent">
+
+            <!-- ========== DASHBOARD ========== -->
+            <section class="tab-content active" id="tab-dashboard">
+                <div id="dashStart" class="dash-start">
+                    <h1 data-i18n="start_project">Start Project</h1>
+                    <p class="sub" data-i18n="start_sub">Pilih mode untuk memulai kendali</p>
+                    <div class="cards">
+                        <div class="pick" onclick="setDashMode('sensor')">
+                            <svg class="pick-icon" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span>Sensor Preview</span>
+                        </div>
+                        <div class="pick" onclick="setDashMode('robot')">
+                            <svg class="pick-icon" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 6V4"/><circle cx="8" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/><path d="M9 14h6"/><rect x="10" y="4" width="4" height="2" rx="1"/></svg>
+                            <span>Robot Controller</span>
+                        </div>
+                        <div class="pick" onclick="setDashMode('all')">
+                            <svg class="pick-icon" viewBox="0 0 24 24"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4 12H2"/><path d="M22 12h-2"/><path d="M19.1 4.9l-2.8 2.8"/><path d="M7.7 16.3l-2.8 2.8"/><path d="M16.3 7.7l2.8-2.8"/><path d="M4.9 19.1l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
+                            <span>All Preview</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dashWork" class="dash-work">
+                    <div class="bar">
+                        <h2 id="dashTitle">Mode</h2>
+                        <button class="back-btn" onclick="resetDashboard()" data-i18n="btn_back">
+                            <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+                            Kembali
+                        </button>
+                    </div>
+                    <div class="dash-grid" id="dashGrid">
+                        <!-- Sensor: Suhu -->
+                        <div class="card" id="cardSuhu" style="display:none;">
+                            <h3 data-i18n="temp">Suhu</h3>
+                            <div class="metric" id="valSuhu">-- °C</div>
+                            <div class="chart-wrap"><canvas id="chartSuhu"></canvas></div>
+                        </div>
+                        <!-- Sensor: Kelembaban -->
+                        <div class="card" id="cardKelembaban" style="display:none;">
+                            <h3 data-i18n="hum">Kelembaban</h3>
+                            <div class="metric" id="valKelembaban">-- %</div>
+                            <div class="chart-wrap"><canvas id="chartKelembaban"></canvas></div>
+                        </div>
+                        <!-- Robot -->
+                        <div class="card card-full" id="cardRobot" style="display:none;">
+                            <h3 data-i18n="dpad">Kontrol Arah</h3>
+                            <div class="dpad-wrap">
+                                <div class="dpad">
+                                    <button class="btn-d btn-up" data-action="up">
+                                        <svg viewBox="0 0 200 200"><path d="M109.9 5.3c-1.3-1.3-2.8-2.3-4.5-3 -3.4-1.4-7.2-1.4-10.7 0 -1.8 0.7-3.3 1.8-4.6 3.1L34.8 60.7c-5.5 5.4-5.5 14.2 0 19.7 5.4 5.4 14.3 5.4 19.7 0l31.5-31.5v135.9c0 7.7 6.2 14 13.9 14 7.8 0 14-6.3 14-14V48.9l31.5 31.5c5.4 5.4 14.3 5.5 19.7 0 5.5-5.5 5.4-14.3 0-19.8L109.9 5.3z"/></svg>
+                                    </button>
+                                    <button class="btn-d btn-left" data-action="left">
+                                        <svg viewBox="0 0 200 200"><path transform="rotate(-90 100 100)" d="M109.9 5.3c-1.3-1.3-2.8-2.3-4.5-3 -3.4-1.4-7.2-1.4-10.7 0 -1.8 0.7-3.3 1.8-4.6 3.1L34.8 60.7c-5.5 5.4-5.5 14.2 0 19.7 5.4 5.4 14.3 5.4 19.7 0l31.5-31.5v135.9c0 7.7 6.2 14 13.9 14 7.8 0 14-6.3 14-14V48.9l31.5 31.5c5.4 5.4 14.3 5.5 19.7 0 5.5-5.5 5.4-14.3 0-19.8L109.9 5.3z"/></svg>
+                                    </button>
+                                    <button class="btn-d btn-center" data-action="horn">
+                                        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="var(--text)"/></svg>
+                                    </button>
+                                    <button class="btn-d btn-right" data-action="right">
+                                        <svg viewBox="0 0 200 200"><path transform="rotate(90 100 100)" d="M109.9 5.3c-1.3-1.3-2.8-2.3-4.5-3 -3.4-1.4-7.2-1.4-10.7 0 -1.8 0.7-3.3 1.8-4.6 3.1L34.8 60.7c-5.5 5.4-5.5 14.2 0 19.7 5.4 5.4 14.3 5.4 19.7 0l31.5-31.5v135.9c0 7.7 6.2 14 13.9 14 7.8 0 14-6.3 14-14V48.9l31.5 31.5c5.4 5.4 14.3 5.5 19.7 0 5.5-5.5 5.4-14.3 0-19.8L109.9 5.3z"/></svg>
+                                    </button>
+                                    <button class="btn-d btn-down" data-action="down">
+                                        <svg viewBox="0 0 200 200"><path transform="rotate(180 100 100)" d="M109.9 5.3c-1.3-1.3-2.8-2.3-4.5-3 -3.4-1.4-7.2-1.4-10.7 0 -1.8 0.7-3.3 1.8-4.6 3.1L34.8 60.7c-5.5 5.4-5.5 14.2 0 19.7 5.4 5.4 14.3 5.4 19.7 0l31.5-31.5v135.9c0 7.7 6.2 14 13.9 14 7.8 0 14-6.3 14-14V48.9l31.5 31.5c5.4 5.4 14.3 5.5 19.7 0 5.5-5.5 5.4-14.3 0-19.8L109.9 5.3z"/></svg>
+                                    </button>
+                                </div>
+                                <div class="slider-group">
+                                    <label>Slider 1 <span id="valSlider1">0</span></label>
+                                    <input type="range" min="0" max="180" value="0" oninput="sendCtrl('c',this.value); document.getElementById('valSlider1').innerText=this.value;" />
+                                    <label>Slider 2 <span id="valSlider2">0</span></label>
+                                    <input type="range" min="0" max="180" value="0" step="5" oninput="sendCtrl('x',this.value); document.getElementById('valSlider2').innerText=this.value;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== LOG ========== -->
+            <section class="tab-content" id="tab-log">
+                <h2 style="font-weight:700;letter-spacing:-0.3px;margin-bottom:4px;" data-i18n="menu_log">System Log</h2>
+                <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:12px;" data-i18n="log_desc">Data yang masuk ke program terekam di sini.</p>
+                <div class="log-toolbar">
+                    <button class="btn-sm" onclick="document.getElementById('logBox').innerHTML=''">Clear Log</button>
+                </div>
+                <div class="log-box" id="logBox"></div>
+            </section>
+
+            <!-- ========== SETTINGS ========== -->
+            <section class="tab-content" id="tab-settings">
+                <h2 style="font-weight:700;letter-spacing:-0.3px;margin-bottom:16px;" data-i18n="menu_settings">Pengaturan</h2>
+                <div class="settings-group">
+                    <div class="field">
+                        <label data-i18n="set_theme">1. Tema</label>
+                        <select id="selTheme" onchange="applySettings()">
+                            <option value="theme-dark">Dark (Ori)</option>
+                            <option value="theme-light">Light</option>
+                            <option value="theme-contrast">High Contrast</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label data-i18n="set_lang">2. Bahasa</label>
+                        <select id="selLang" onchange="applySettings()">
+                            <option value="id">Indonesia</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== HELP ========== -->
+            <section class="tab-content" id="tab-help">
+                <h2 style="font-weight:700;letter-spacing:-0.3px;margin-bottom:16px;" data-i18n="menu_help">Help & Panduan</h2>
+                <h3 style="color:var(--blue);font-weight:700;font-size:1rem;margin-bottom:6px;">📌 Langkah-langkah</h3>
+                <ul class="help-list">
+                    <li><strong>1.</strong> Pilih project di Dashboard (Sensor / Robot / All).</li>
+                    <li><strong>2.</strong> Hubungkan Micro:bit via Bluetooth (tombol di sidebar).</li>
+                    <li><strong>3.</strong> Gunakan D-pad untuk menggerakkan robot (mode Robot/All).</li>
+                    <li><strong>4.</strong> Data suhu & kelembaban tampil real-time (mode Sensor/All).</li>
+                    <li><strong>5.</strong> Log merekam semua komunikasi data.</li>
+                </ul>
+                <h3 style="color:var(--green);font-weight:700;font-size:1rem;margin:16px 0 6px;">💡 Tips</h3>
+                <ul class="help-list">
+                    <li>Gunakan Chrome / Edge untuk koneksi Bluetooth terbaik.</li>
+                    <li>Pastikan Micro:bit dalam kondisi menyala dan paired.</li>
+                </ul>
+            </section>
+
+            <!-- ========== DEVELOPER ========== -->
+            <section class="tab-content" id="tab-developer">
+                <h2 style="font-weight:700;letter-spacing:-0.3px;margin-bottom:16px;" data-i18n="menu_developer">Developer</h2>
+                <div class="dev-card">
+                    <ul>
+                        <li>
+                            <svg class="dev-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                            <strong>Supported by :</strong> <a href="https://domaah.biz.id" target="_blank">Domaah</a>
+                        </li>
+                        <li>
+                            <svg class="dev-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <strong>Owner :</strong> <a href="https://muhammadalifalhafidz.vercel.app" target="_blank">Muhammad Alif Alhafidz</a>
+                        </li>
+                        <li>
+                            <svg class="dev-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <strong>WhatsApp :</strong> <a href="https://wa.me/628811078080" target="_blank">+62 881-1078-080</a>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // I18N
+        // ============================================================
+        const DICT = {
+            id: {
+                disconnected: "Terputus",
+                connected: "Terhubung",
+                menu_dashboard: "Dashboard",
+                menu_log: "Log",
+                menu_settings: "Setting",
+                menu_help: "Help",
+                menu_developer: "Developer",
+                btn_connect: "Hubungkan Bluetooth",
+                btn_disconnect: "Putuskan Koneksi",
+                start_project: "Start Project",
+                start_sub: "Pilih mode untuk memulai kendali",
+                btn_back: "Kembali",
+                temp: "Suhu",
+                hum: "Kelembaban",
+                dpad: "Kontrol Arah",
+                log_desc: "Data yang masuk ke program terekam di sini.",
+                set_theme: "1. Tema",
+                set_lang: "2. Bahasa",
+                conn_searching: "Mencari Micro:bit...",
+                conn_connecting: "Menghubungkan ke {name}...",
+                conn_success: "Terhubung!",
+                conn_fail: "Gagal terhubung",
+                loading_search: "Mencari Micro:bit...",
+                loading_ready: "Siap!",
+            },
+            en: {
+                disconnected: "Disconnected",
+                connected: "Connected",
+                menu_dashboard: "Dashboard",
+                menu_log: "Log",
+                menu_settings: "Settings",
+                menu_help: "Help",
+                menu_developer: "Developer",
+                btn_connect: "Connect Bluetooth",
+                btn_disconnect: "Disconnect",
+                start_project: "Start Project",
+                start_sub: "Pick a mode to start control",
+                btn_back: "Go Back",
+                temp: "Temperature",
+                hum: "Humidity",
+                dpad: "Direction Control",
+                log_desc: "All incoming data is logged here.",
+                set_theme: "1. Theme",
+                set_lang: "2. Language",
+                conn_searching: "Searching for Micro:bit...",
+                conn_connecting: "Connecting to {name}...",
+                conn_success: "Connected!",
+                conn_fail: "Connection failed",
+                loading_search: "Searching for Micro:bit...",
+                loading_ready: "Ready!",
+            }
+        };
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        let activeTab = 'dashboard';
+        let bleDevice = null;
+        let txChar = null;
+        let isConnected = false;
+        let isConnecting = false;
+        let currentLang = 'id';
+        let currentTheme = 'theme-dark';
+        let dashMode = null;
+
+        const UART_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+        const RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+        const TX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+        // ============================================================
+        // DOM REFS
+        // ============================================================
+        const $ = id => document.getElementById(id);
+        const qs = (sel, ctx = document) => ctx.querySelector(sel);
+        const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+        const loadingOverlay = $('loadingOverlay');
+        const loaderBar = $('loaderBar');
+        const loaderPercent = $('loaderPercent');
+        const loaderSub = $('loaderSub');
+        const loaderTitle = $('loaderTitle');
+        const connectOverlay = $('connectOverlay');
+        const connText = $('connText');
+        const connSub = $('connSub');
+        const app = $('app');
+        const sidebar = $('sidebar');
+        const hamburger = $('hamburger');
+        const headerDot = $('headerDot');
+        const headerStatusText = $('headerStatusText');
+        const navDot = $('navDot');
+        const navStatusText = $('navStatusText');
+        const navTime = $('navTime');
+        const connectBtn = $('connectBtn');
+        const logBox = $('logBox');
+        const mainContent = $('mainContent');
+        const dashStart = $('dashStart');
+        const dashWork = $('dashWork');
+        const dashTitle = $('dashTitle');
+        const dashGrid = $('dashGrid');
+        const cardSuhu = $('cardSuhu');
+        const cardKelembaban = $('cardKelembaban');
+        const cardRobot = $('cardRobot');
+        const valSuhu = $('valSuhu');
+        const valKelembaban = $('valKelembaban');
+        const selTheme = $('selTheme');
+        const selLang = $('selLang');
+
+        // ============================================================
+        // AMBIENT PARTICLES
+        // ============================================================
+        const canvas = $('ambientCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
+
+        function resizeCanvas() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.r = 1.5 + Math.random() * 3;
+                this.dx = (Math.random() - 0.5) * 0.35;
+                this.dy = (Math.random() - 0.5) * 0.35;
+                this.alpha = 0.12 + Math.random() * 0.3;
+                this.hue = 200 + Math.random() * 80;
+            }
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                if (this.x < 0 || this.x > w) this.dx *= -1;
+                if (this.y < 0 || this.y > h) this.dy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 70%, 60%, ${this.alpha})`;
+                ctx.fill();
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 4);
+                grad.addColorStop(0, `hsla(${this.hue}, 80%, 70%, ${this.alpha * 0.25})`);
+                grad.addColorStop(1, `hsla(${this.hue}, 80%, 70%, 0)`);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r * 4, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+        }
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach(p => { p.update();
+                p.draw(); });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(100, 180, 255, ${0.05 * (1 - dist / 120)})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // ============================================================
+        // LOADING
+        // ============================================================
+        const loaderGrid = $('loaderGrid');
+        const connectGrid = $('connectGrid');
+
+        function buildLEDGrid(container, cls) {
+            container.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const led = document.createElement('div');
+                led.className = cls;
+                led.dataset.idx = i;
+                container.appendChild(led);
+            }
+        }
+        buildLEDGrid(loaderGrid, 'led');
+        buildLEDGrid(connectGrid, 'led-c');
+
+        const patterns = [
+            [0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0],
+            [0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        ];
+        let patternIdx = 0;
+        let ledInterval;
+
+        function animateLoaderLEDs() {
+            const leds = qsa('.led', loaderGrid);
+            const pat = patterns[patternIdx % patterns.length];
+            leds.forEach((led, i) => {
+                if (pat[i]) {
+                    led.className = 'led on' + (i % 3 === 0 ? ' green' : i % 3 === 1 ? ' blue' : '');
+                } else {
+                    led.className = 'led';
+                }
+            });
+            patternIdx++;
+        }
+
+        function startLoaderLEDs() {
+            if (ledInterval) clearInterval(ledInterval);
+            animateLoaderLEDs();
+            ledInterval = setInterval(animateLoaderLEDs, 300);
+        }
+
+        function stopLoaderLEDs() {
+            if (ledInterval) clearInterval(ledInterval);
+            qsa('.led', loaderGrid).forEach(l => l.className = 'led');
+        }
+
+        let loaderProgress = 0;
+        let loadComplete = false;
+
+        function simulateLoading() {
+            loaderProgress = 0;
+            const interval = setInterval(() => {
+                loaderProgress += 5 + Math.random() * 5;
+                if (loaderProgress > 100) loaderProgress = 100;
+                loaderBar.style.width = loaderProgress + '%';
+                loaderPercent.textContent = Math.round(loaderProgress) + '%';
+                if (loaderProgress >= 100) {
+                    clearInterval(interval);
+                    loadComplete = true;
+                    setTimeout(() => {
+                        stopLoaderLEDs();
+                        loadingOverlay.classList.remove('active');
+                        app.classList.add('visible');
+                    }, 400);
+                }
+            }, 80);
+        }
+
+        // ============================================================
+        // CONNECTION OVERLAY LEDS
+        // ============================================================
+        let connectLEDInterval;
+
+        function animateConnectLEDs() {
+            const leds = qsa('.led-c', connectGrid);
+            const col = Math.floor(Math.random() * 5);
+            const row = Math.floor(Math.random() * 5);
+            leds.forEach((led, i) => {
+                const r = Math.floor(i / 5);
+                const c = i % 5;
+                const dist = Math.abs(r - row) + Math.abs(c - col);
+                if (dist < 2) {
+                    led.className = 'led-c on' + (dist === 0 ? ' blue' : '');
+                } else {
+                    led.className = 'led-c';
+                }
+            });
+        }
+
+        function startConnectLEDs() {
+            if (connectLEDInterval) clearInterval(connectLEDInterval);
+            animateConnectLEDs();
+            connectLEDInterval = setInterval(animateConnectLEDs, 120);
+        }
+
+        function stopConnectLEDs() {
+            if (connectLEDInterval) clearInterval(connectLEDInterval);
+            qsa('.led-c', connectGrid).forEach(l => l.className = 'led-c');
+        }
+
+        function showConnectOverlay(text, sub) {
+            connText.textContent = text || 'MENGHUBUNGKAN';
+            connSub.textContent = sub || 'Mencari perangkat...';
+            connectOverlay.classList.add('active');
+            startConnectLEDs();
+        }
+
+        function hideConnectOverlay() {
+            connectOverlay.classList.remove('active');
+            stopConnectLEDs();
+        }
+
+        // ============================================================
+        // BLUETOOTH
+        // ============================================================
+        function sysLog(msg, type = 'sys') {
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = `entry ${type}`;
+            div.textContent = `[${time}] ${msg}`;
+            logBox.appendChild(div);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        async function sendUART(data) {
+            if (!txChar) return;
+            try {
+                await txChar.writeValue(new TextEncoder().encode(data + '\n'));
+                sysLog(`TX → ${data}`, 'tx');
+            } catch (e) {
+                sysLog(`TX Error: ${e.message}`, 'err');
+            }
+        }
+
+        function sendCtrl(prefix, val) {
+            sendUART(`${prefix}${val}`);
+        }
+
+        function bindPad(btn) {
+            const action = btn.dataset.action;
+            if (!action) return;
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                sendUART(action);
+                if (btn.setPointerCapture) btn.setPointerCapture(e.pointerId);
+            });
+            const stop = (e) => {
+                sendUART('stop');
+                if (e && e.pointerId != null && btn.hasPointerCapture && btn.hasPointerCapture(e.pointerId)) {
+                    btn.releasePointerCapture(e.pointerId);
+                }
+            };
+            btn.addEventListener('pointerup', stop);
+            btn.addEventListener('pointercancel', stop);
+            btn.addEventListener('pointerleave', stop);
+        }
+        qsa('.btn-d[data-action]').forEach(b => bindPad(b));
+
+        connectBtn.addEventListener('click', async () => {
+            if (isConnected) {
+                if (bleDevice && bleDevice.gatt) {
+                    bleDevice.gatt.disconnect();
+                }
+                return;
+            }
+            if (isConnecting) return;
+            isConnecting = true;
+
+            try {
+                showConnectOverlay(
+                    DICT[currentLang]?.conn_searching || 'Mencari Micro:bit...',
+                    'Pastikan Micro:bit menyala'
+                );
+
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'BBC micro:bit' }],
+                    optionalServices: [UART_SERVICE]
+                });
+
+                const name = bleDevice.name || 'Micro:bit';
+                connText.textContent = DICT[currentLang]?.conn_connecting?.replace('{name}', name) ||
+                    `Menghubungkan ke ${name}...`;
+                connSub.textContent = 'Tunggu sebentar...';
+
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnect);
+
+                const server = await bleDevice.gatt.connect();
+                const service = await server.getPrimaryService(UART_SERVICE);
+                const rxChar = await service.getCharacteristic(RX_UUID);
+                await rxChar.startNotifications();
+                rxChar.addEventListener('characteristicvaluechanged', onRx);
+
+                txChar = await service.getCharacteristic(TX_UUID);
+
+                isConnected = true;
+                isConnecting = false;
+                updateUI(true);
+                hideConnectOverlay();
+                sysLog(`Terhubung ke "${name}"`, 'sys');
+                connText.textContent = DICT[currentLang]?.conn_success || 'Terhubung!';
+                setTimeout(hideConnectOverlay, 600);
+
+            } catch (err) {
+                isConnecting = false;
+                sysLog(`Gagal: ${err.message}`, 'err');
+                connText.textContent = DICT[currentLang]?.conn_fail || 'Gagal terhubung';
+                connSub.textContent = err.message;
+                setTimeout(hideConnectOverlay, 2000);
+                updateUI(false);
+            }
+        });
+
+        function onDisconnect() {
+            isConnected = false;
+            txChar = null;
+            updateUI(false);
+            sysLog('Bluetooth terputus', 'err');
+        }
+
+        function onRx(e) {
+            const val = new TextDecoder().decode(e.target.value).trim();
+            if (!val) return;
+            sysLog(`RX ← ${val}`, 'rx');
+            const parts = val.split(':');
+            if (parts.length === 2) {
+                const key = parts[0].toLowerCase();
+                const num = parseFloat(parts[1]);
+                if (!isNaN(num)) {
+                    if (key === 'suhu') {
+                        valSuhu.textContent = num + ' °C';
+                        updateChart(chartSuhu, num);
+                    } else if (key === 'kelembaban') {
+                        valKelembaban.textContent = num + ' %';
+                        updateChart(chartKelembaban, num);
+                    }
+                }
+            }
+        }
+
+        function updateUI(connected) {
+            const lang = currentLang;
+            const dict = DICT[lang] || DICT.id;
+            isConnected = connected;
+
+            navDot.className = 'dot' + (connected ? ' connected' : '');
+            navStatusText.textContent = connected ? dict.connected : dict.disconnected;
+            headerDot.className = 'dot-sm' + (connected ? ' connected' : '');
+            headerStatusText.textContent = connected ? 'Online' : 'Offline';
+
+            if (connected) {
+                connectBtn.textContent = dict.btn_disconnect || 'Putuskan Koneksi';
+                connectBtn.className = 'nav-connect disconnect';
+            } else {
+                connectBtn.textContent = dict.btn_connect || 'Hubungkan Bluetooth';
+                connectBtn.className = 'nav-connect';
+            }
+            applyLanguage();
+        }
+
+        // ============================================================
+        // CHARTS
+        // ============================================================
+        let chartSuhu, chartKelembaban;
+
+        function initCharts() {
+            chartSuhu = new Chart($('chartSuhu'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ data: [], borderColor: '#4f9cf7', borderWidth: 2.5,
+                        tension: 0.4, pointRadius: 0, fill: true,
+                        backgroundColor: 'rgba(79,156,247,0.1)' }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1, cornerRadius: 8, displayColors: false } },
+                    scales: { x: { display: false, grid: { display: false } }, y: { ticks: { color: 'rgba(255,255,255,0.35)',
+                                font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)',
+                                drawBorder: false }, border: { display: false } } },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+
+            chartKelembaban = new Chart($('chartKelembaban'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ data: [], borderColor: '#34d399', borderWidth: 2.5,
+                        tension: 0.4, pointRadius: 0, fill: true,
+                        backgroundColor: 'rgba(52,211,153,0.1)' }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1, cornerRadius: 8, displayColors: false } },
+                    scales: { x: { display: false, grid: { display: false } }, y: { ticks: { color: 'rgba(255,255,255,0.35)',
+                                font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)',
+                                drawBorder: false }, border: { display: false } } },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        function updateChart(chart, val) {
+            chart.data.labels.push('');
+            chart.data.datasets[0].data.push(val);
+            if (chart.data.labels.length > 25) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            chart.update('none');
+        }
+
+        // ============================================================
+        // DASHBOARD MODE
+        // ============================================================
+        function setDashMode(mode) {
+            dashMode = mode;
+            dashStart.style.display = 'none';
+            dashWork.style.display = 'block';
+            dashWork.style.animation = 'none';
+            void dashWork.offsetWidth;
+            dashWork.style.animation = 'fadeUp 0.5s cubic-bezier(0.22,1,0.36,1)';
+
+            const showSuhu = mode === 'sensor' || mode === 'all';
+            const showKelembaban = mode === 'sensor' || mode === 'all';
+            const showRobot = mode === 'robot' || mode === 'all';
+
+            cardSuhu.style.display = showSuhu ? '' : 'none';
+            cardKelembaban.style.display = showKelembaban ? '' : 'none';
+            cardRobot.style.display = showRobot ? '' : 'none';
+
+            dashTitle.textContent = mode === 'sensor' ? 'Sensor Preview' :
+                mode === 'robot' ? 'Robot Controller' : 'All Preview';
+
+            qsa('.card', dashGrid).forEach((c, i) => {
+                c.style.animation = 'none';
+                void c.offsetWidth;
+                c.style.animation = `fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 0.06}s backwards`;
+            });
+        }
+
+        function resetDashboard() {
+            dashWork.style.display = 'none';
+            dashStart.style.display = 'flex';
+            dashStart.style.animation = 'none';
+            void dashStart.offsetWidth;
+            dashStart.style.animation = 'fadeUp 0.5s cubic-bezier(0.22,1,0.36,1)';
+            dashMode = null;
+        }
+
+        // ============================================================
+        // TAB SWITCHING
+        // ============================================================
+        function switchTab(tabId) {
+            if (tabId === activeTab) return;
+            const old = qs(`#tab-${activeTab}`);
+            const next = qs(`#tab-${tabId}`);
+            if (!old || !next) return;
+
+            old.classList.remove('active');
+            next.classList.add('active');
+
+            qsa('.nav-links li').forEach(li => {
+                li.classList.toggle('active', li.dataset.tab === tabId);
+            });
+
+            activeTab = tabId;
+
+            if (window.innerWidth <= 820) {
+                sidebar.classList.remove('open');
+                hamburger.classList.remove('open');
+            }
+        }
+
+        // ============================================================
+        // LANGUAGE & THEME
+        // ============================================================
+        function applyLanguage() {
+            const lang = currentLang;
+            const dict = DICT[lang] || DICT.id;
+            qsa('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (dict[key] !== undefined) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'SELECT') return;
+                    el.textContent = dict[key];
+                }
+            });
+            if (isConnected) {
+                connectBtn.textContent = dict.btn_disconnect || 'Putuskan Koneksi';
+                connectBtn.className = 'nav-connect disconnect';
+            } else {
+                connectBtn.textContent = dict.btn_connect || 'Hubungkan Bluetooth';
+                connectBtn.className = 'nav-connect';
+            }
+            navStatusText.textContent = isConnected ? dict.connected : dict.disconnected;
+        }
+
+        function applyTheme(theme) {
+            document.body.className = theme;
+            currentTheme = theme;
+            selTheme.value = theme;
+        }
+
+        function applySettings() {
+            const theme = selTheme.value;
+            const lang = selLang.value;
+            currentLang = lang;
+            applyTheme(theme);
+            applyLanguage();
+            if (chartSuhu) chartSuhu.update('none');
+            if (chartKelembaban) chartKelembaban.update('none');
+        }
+
+        // ============================================================
+        // CLOCK
+        // ============================================================
+        function updateClock() {
+            navTime.textContent = new Date().toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ============================================================
+        // HAMBURGER
+        // ============================================================
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            hamburger.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 820) {
+                const isNav = sidebar.contains(e.target) || hamburger.contains(e.target);
+                if (!isNav && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    hamburger.classList.remove('open');
+                }
+            }
+        });
+
+        // ============================================================
+        // NAV LINKS
+        // ============================================================
+        qsa('.nav-links li').forEach(li => {
+            li.addEventListener('click', () => {
+                const tab = li.dataset.tab;
+                if (tab) switchTab(tab);
+            });
+        });
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        function init() {
+            buildLEDGrid(loaderGrid, 'led');
+            buildLEDGrid(connectGrid, 'led-c');
+
+            startLoaderLEDs();
+            simulateLoading();
+            initCharts();
+
+            const savedTheme = localStorage.getItem('domaah-theme') || 'theme-dark';
+            const savedLang = localStorage.getItem('domaah-lang') || 'id';
+            selTheme.value = savedTheme;
+            selLang.value = savedLang;
+            currentLang = savedLang;
+            applyTheme(savedTheme);
+            applyLanguage();
+
+            selTheme.addEventListener('change', () => {
+                localStorage.setItem('domaah-theme', selTheme.value);
+                applySettings();
+            });
+            selLang.addEventListener('change', () => {
+                localStorage.setItem('domaah-lang', selLang.value);
+                applySettings();
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 820) {
+                    sidebar.classList.remove('open');
+                    hamburger.classList.remove('open');
+                }
+            });
+
+            updateUI(false);
+        }
+
+        // Expose globals
+        window.switchTab = switchTab;
+        window.setDashMode = setDashMode;
+        window.resetDashboard = resetDashboard;
+        window.applySettings = applySettings;
+        window.sendCtrl = sendCtrl;
+        window.sendUART = sendUART;
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
