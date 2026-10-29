@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1" />
+    <title>Domaah Micro:Bit versi 1.0</title>
+    <link rel="icon" type="image/png" href="domaah-logo.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ============================================================
+           1. RESET & VARIABLES
+           ============================================================ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(128,128,128,0.35) transparent;
+        }
+        *::-webkit-scrollbar { width: 5px; height: 5px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.35); border-radius: 10px; }
+
+        :root {
+            /* iOS solid colors */
+            --blue: #0A84FF;
+            --green: #30D158;
+            --red: #FF453A;
+            --purple: #BF5AF2;
+            --teal: #64D2FF;
+            --amber: #FF9F0A;
+            --blue-soft: rgba(10,132,255,0.15);
+            --red-soft: rgba(255,69,58,0.15);
+            --amber-soft: rgba(255,159,10,0.15);
+
+            /* Glass */
+            --glass: rgba(255,255,255,0.06);
+            --glass-strong: rgba(255,255,255,0.1);
+            --glass-hover: rgba(255,255,255,0.12);
+            --glass-border: rgba(255,255,255,0.12);
+
+            --text: #ffffff;
+            --text2: rgba(255,255,255,0.6);
+            --text3: rgba(255,255,255,0.35);
+
+            /* Shapes */
+            --r-card: 24px;
+            --r-btn: 16px;
+            --r-pill: 999px;
+
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+            --ease: cubic-bezier(0.34, 1.3, 0.64, 1);
+            --tr: 0.35s var(--ease);
+
+            --nav-w: 270px;
+            --header-h: 60px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+        }
+
+        body {
+            font-family: var(--font);
+            background: #000000;
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.theme-light {
+            background: #ffffff;
+            --glass: rgba(0,0,0,0.04);
+            --glass-strong: rgba(0,0,0,0.06);
+            --glass-hover: rgba(0,0,0,0.08);
+            --glass-border: rgba(0,0,0,0.1);
+            --text: #000000;
+            --text2: rgba(0,0,0,0.6);
+            --text3: rgba(0,0,0,0.35);
+            --shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+
+        body.theme-contrast {
+            background: #000000;
+            --glass: #000000;
+            --glass-strong: #111100;
+            --glass-hover: #222200;
+            --glass-border: #ffff00;
+            --text: #ffff00;
+            --text2: #00ffff;
+            --text3: #00cccc;
+            --blue: #00ffff;
+            --green: #00ff00;
+            --red: #ff0000;
+            --purple: #ff00ff;
+            --teal: #00ffff;
+            --amber: #ffff00;
+            --shadow: none;
+            --r-card: 16px;
+            --r-btn: 12px;
+        }
+
+        /* ============================================================
+           2. LOADING — iOS SPINNER STYLE (no 3D)
+           ============================================================ */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            pointer-events: none;
+        }
+        #connectOverlay { z-index: 99998; }
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        body.theme-light .overlay { background: rgba(255,255,255,0.92); }
+
+        /* --- Apple activity indicator: 12 bars --- */
+        .ios-spinner {
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+        .ios-spinner span {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 18px;
+            margin-left: -2px;
+            border-radius: 4px;
+            background: var(--text);
+            opacity: 0.15;
+            transform-origin: 50% 32px;
+            animation: iosFade 1s linear infinite;
+        }
+        .ios-spinner span:nth-child(1)  { transform: rotate(0deg);   animation-delay: -1s; }
+        .ios-spinner span:nth-child(2)  { transform: rotate(30deg);  animation-delay: -0.916s; }
+        .ios-spinner span:nth-child(3)  { transform: rotate(60deg);  animation-delay: -0.833s; }
+        .ios-spinner span:nth-child(4)  { transform: rotate(90deg);  animation-delay: -0.75s; }
+        .ios-spinner span:nth-child(5)  { transform: rotate(120deg); animation-delay: -0.666s; }
+        .ios-spinner span:nth-child(6)  { transform: rotate(150deg); animation-delay: -0.583s; }
+        .ios-spinner span:nth-child(7)  { transform: rotate(180deg); animation-delay: -0.5s; }
+        .ios-spinner span:nth-child(8)  { transform: rotate(210deg); animation-delay: -0.416s; }
+        .ios-spinner span:nth-child(9)  { transform: rotate(240deg); animation-delay: -0.333s; }
+        .ios-spinner span:nth-child(10) { transform: rotate(270deg); animation-delay: -0.25s; }
+        .ios-spinner span:nth-child(11) { transform: rotate(300deg); animation-delay: -0.166s; }
+        .ios-spinner span:nth-child(12) { transform: rotate(330deg); animation-delay: -0.083s; }
+        @keyframes iosFade {
+            0%   { opacity: 1; }
+            100% { opacity: 0.15; }
+        }
+
+        .loading-title {
+            margin-top: 28px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--text);
+        }
+        .loading-sub {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text2);
+        }
+        .loading-bar {
+            margin-top: 24px;
+            width: 200px;
+            height: 5px;
+            background: var(--glass-strong);
+            border-radius: var(--r-pill);
+            overflow: hidden;
+        }
+        .loading-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: var(--text);
+            border-radius: var(--r-pill);
+            transition: width 0.3s ease;
+        }
+        .loading-percent {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text3);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+        }
+
+        /* ============================================================
+           3. APP LAYOUT
+           ============================================================ */
+        #app {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        #app.visible { opacity: 1; }
+
+        /* ---- Sidebar ---- */
+        nav {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: var(--nav-w);
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-right: 1px solid var(--glass-border);
+            padding: 24px 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+            transition: transform 0.45s var(--ease);
+            overflow-y: auto;
+        }
+        @media (min-width: 821px) {
+            nav { transform: translateX(0) !important; }
+            .app-header { display: none !important; }
+        }
+        @media (max-width: 820px) {
+            nav {
+                top: var(--header-h);
+                transform: translateX(-110%);
+                border-radius: 0 24px 24px 0;
+            }
+            nav.open { transform: translateX(0); }
+            .app-header { display: flex; }
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--r-card);
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-border);
+        }
+        .brand-badge {
+            width: 38px; height: 38px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .brand-badge svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.4; }
+        .brand-name { font-size: 0.95rem; font-weight: 800; letter-spacing: -0.2px; }
+        .brand-ver { font-size: 0.62rem; font-weight: 600; color: var(--text3); letter-spacing: 1px; }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            border-radius: var(--r-pill);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+        .status-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--red);
+            transition: background 0.3s ease;
+        }
+        .status-dot.ok { background: var(--green); }
+        .status-time {
+            margin-left: auto;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text3);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            margin-top: 4px;
+        }
+        .nav-links li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--r-pill);
+            font-size: 0.87rem;
+            font-weight: 700;
+            color: var(--text2);
+            cursor: pointer;
+            user-select: none;
+            transition: all var(--tr);
+        }
+        .nav-links li svg {
+            width: 19px; height: 19px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .nav-links li:hover { background: var(--glass-hover); color: var(--text); }
+        .nav-links li.active { background: var(--blue); color: #fff; }
+
+        .nav-connect {
+            padding: 14px;
+            border: none;
+            border-radius: var(--r-pill);
+            background: var(--blue);
+            color: #fff;
+            font-family: var(--font);
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--tr);
+        }
+        .nav-connect:hover { filter: brightness(1.12); transform: translateY(-2px); }
+        .nav-connect:active { transform: scale(0.96); }
+        .nav-connect.disconnect { background: var(--red); }
+
+        .nav-home {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px;
+            border-radius: var(--r-pill);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text2);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all var(--tr);
+        }
+        .nav-home:hover { background: var(--glass-hover); color: var(--text); }
+        .nav-home svg {
+            width: 14px; height: 14px;
+            fill: none; stroke: currentColor;
+            stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        /* ---- Header mobile ---- */
+        .app-header {
+            position: fixed;
+            top: 10px; left: 10px; right: 10px;
+            height: calc(var(--header-h) - 20px);
+            z-index: 50;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            background: var(--glass-strong);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--r-pill);
+        }
+        .hamburger {
+            width: 40px; height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            border: none;
+            background: var(--glass);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .hamburger span {
+            width: 18px; height: 2.5px;
+            background: var(--text);
+            border-radius: var(--r-pill);
+            transition: all 0.3s var(--ease);
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+        .header-title { font-size: 0.92rem; font-weight: 800; }
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 13px;
+            border-radius: var(--r-pill);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text2);
+        }
+        .header-status .status-dot { width: 7px; height: 7px; }
+
+        /* ---- Main ---- */
+        main {
+            flex: 1;
+            margin-left: var(--nav-w);
+            padding: 32px 32px 24px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        @media (max-width: 820px) {
+            main { margin-left: 0; padding: 80px 16px 20px; }
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: rise 0.45s var(--ease); }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        .page-sub {
+            font-size: 0.85rem;
+            color: var(--text2);
+            margin-bottom: 20px;
+        }
+
+        /* ============================================================
+           4. DASHBOARD
+           ============================================================ */
+        .dash-start {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            gap: 8px;
+        }
+        .dash-start h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -1.5px; }
+        .dash-start .sub { color: var(--text2); font-size: 0.95rem; margin-bottom: 24px; }
+        .start-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            justify-content: center;
+        }
+        .pick {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-width: 180px;
+            padding: 26px 28px;
+            border-radius: var(--r-card);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--tr);
+        }
+        .pick:hover { background: var(--glass-hover); transform: translateY(-4px); }
+        .pick:active { transform: scale(0.96); }
+        .pick-icon {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pick:nth-child(2) .pick-icon { background: var(--purple); }
+        .pick:nth-child(3) .pick-icon { background: var(--teal); }
+        .pick-icon svg {
+            width: 24px; height: 24px;
+            fill: none; stroke: #fff;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        .dash-work { display: none; animation: rise 0.45s var(--ease); }
+        .work-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .work-bar h2 { font-size: 1.35rem; font-weight: 900; letter-spacing: -0.4px; }
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 11px 22px;
+            border-radius: var(--r-pill);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.83rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--tr);
+        }
+        .btn-back:hover { background: var(--glass-hover); }
+        .btn-back svg {
+            width: 15px; height: 15px;
+            fill: none; stroke: currentColor;
+            stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .card {
+            padding: 22px 24px;
+            border-radius: var(--r-card);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            transition: all var(--tr);
+        }
+        .card:hover { background: var(--glass-hover); }
+        .card-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text3);
+            margin-bottom: 6px;
+        }
+        .card-value {
+            font-size: 2.3rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+        .chart-wrap { height: 100px; margin-top: 12px; }
+        .card-full { grid-column: 1 / -1; }
+
+        /* ---- D-pad ---- */
+        .dpad-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 0;
+        }
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 78px);
+            grid-template-rows: repeat(3, 78px);
+            gap: 11px;
+            margin: 8px 0 16px;
+        }
+        @media (max-width: 480px) {
+            .dpad { grid-template-columns: repeat(3, 62px); grid-template-rows: repeat(3, 62px); gap: 8px; }
+        }
+        .btn-d {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            transition: all 0.2s var(--ease);
+        }
+        .btn-d:hover { background: var(--glass-hover); transform: scale(1.05); }
+        .btn-d:active { background: var(--blue); transform: scale(0.84); }
+        .btn-d svg {
+            width: 28px; height: 28px;
+            fill: var(--text);
+            transition: fill 0.2s ease;
+        }
+        .btn-d:active svg { fill: #fff; }
+        .btn-up    { grid-column: 2; grid-row: 1; }
+        .btn-left  { grid-column: 1; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+        .btn-down  { grid-column: 2; grid-row: 3; }
+        .btn-center {
+            grid-column: 2; grid-row: 2;
+            width: 58%; height: 58%;
+            justify-self: center;
+            align-self: center;
+            background: var(--amber-soft);
+            border-color: var(--amber);
+        }
+        .btn-center:active { background: var(--amber); }
+        .btn-center svg { fill: var(--amber); width: 22px; height: 22px; }
+
+        .btn-toggle {
+            padding: 12px 30px;
+            border-radius: var(--r-pill);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 0.83rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all var(--tr);
+        }
+        .btn-toggle.active { background: var(--green); color: #fff; border-color: transparent; }
+
+        /* ---- Sliders ---- */
+        .sliders {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .slider-row { margin-bottom: 14px; }
+        .slider-row label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text2);
+            margin-bottom: 6px;
+        }
+        .slider-row input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 7px;
+            background: var(--glass-strong);
+            border-radius: var(--r-pill);
+            outline: none;
+            cursor: pointer;
+        }
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.2s var(--ease);
+        }
+        .slider-row input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        .slider-row input[type="range"]::-moz-range-thumb {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* ============================================================
+           5. LOG
+           ============================================================ */
+        .log-box {
+            height: calc(100vh - 220px);
+            padding: 18px 20px;
+            border-radius: var(--r-card);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.76rem;
+            line-height: 1.9;
+        }
+        @media (max-width: 820px) { .log-box { height: calc(100vh - 260px); } }
+        .log-entry {
+            padding: 3px 8px;
+            border-radius: 8px;
+            color: var(--text2);
+            transition: background 0.15s ease;
+        }
+        .log-entry:hover { background: var(--glass-hover); }
+        .log-entry.tx  { color: var(--teal); }
+        .log-entry.rx  { color: var(--green); }
+        .log-entry.err { color: var(--red); }
+        .log-entry.sys { color: var(--purple); }
+
+        .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
+        .btn-sm {
+            padding: 10px 22px;
+            border-radius: var(--r-pill);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--tr);
+        }
+        .btn-sm:hover { background: var(--glass-hover); }
+        .btn-sm.danger { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+
+        /* ============================================================
+           6. SETTINGS
+           ============================================================ */
+        .settings-group { max-width: 480px; }
+        .field { margin-bottom: 18px; }
+        .field label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--text2);
+            margin-bottom: 8px;
+        }
+        .field select {
+            width: 100%;
+            padding: 15px 18px;
+            border-radius: var(--r-btn);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.92rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='gray' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            padding-right: 48px;
+            transition: all var(--tr);
+        }
+        .field select:focus { border-color: var(--blue); }
+
+        /* ============================================================
+           7. HELP & DEVELOPER
+           ============================================================ */
+        .help-list { list-style: none; }
+        .help-list li {
+            padding: 14px 18px;
+            margin-bottom: 8px;
+            border-radius: var(--r-btn);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.88rem;
+            color: var(--text2);
+            transition: all 0.2s ease;
+        }
+        .help-list li:hover { background: var(--glass-hover); transform: translateX(4px); }
+        .help-list li strong { color: var(--text); margin-right: 4px; }
+
+        .dev-card {
+            max-width: 480px;
+            padding: 10px 24px;
+            border-radius: var(--r-card);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+        }
+        .dev-card ul { list-style: none; }
+        .dev-card li {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.88rem;
+        }
+        .dev-card li:last-child { border-bottom: none; }
+        .dev-card a { color: var(--blue); text-decoration: none; font-weight: 700; }
+        .dev-card a:hover { text-decoration: underline; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- ========== LOADING (iOS spinner, no 3D) ========== -->
+    <div id="loadingOverlay" class="overlay active">
+        <div class="ios-spinner">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="loading-title">DOMAAH MICRO:BIT</div>
+        <div class="loading-sub" id="loaderSub">Menyiapkan sistem...</div>
+        <div class="loading-bar"><div class="fill" id="loaderBar"></div></div>
+        <div class="loading-percent" id="loaderPercent">0%</div>
+    </div>
+
+    <!-- ========== CONNECT OVERLAY ========== -->
+    <div id="connectOverlay" class="overlay">
+        <div class="ios-spinner">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="loading-title" id="connText">MENGHUBUNGKAN</div>
+        <div class="loading-sub" id="connSub">Mencari perangkat Micro:bit...</div>
+    </div>
+
+    <!-- ========== APP ========== -->
+    <div id="app">
+
+        <header class="app-header">
+            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+            <span class="header-title">Domaah Micro:Bit</span>
+            <div class="header-status">
+                <span class="status-dot" id="headerDot"></span>
+                <span id="headerStatusText">Offline</span>
+            </div>
+        </header>
+
+        <nav id="sidebar">
+            <div class="nav-brand">
+                <div class="brand-badge">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="8.5" cy="8.5" r="1.6" fill="#fff" stroke="none"/><circle cx="15.5" cy="8.5" r="1.6" fill="#fff" stroke="none"/><circle cx="8.5" cy="15.5" r="1.6" fill="#fff" stroke="none"/><circle cx="15.5" cy="15.5" r="1.6" fill="#fff" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="#fff" stroke="none"/></svg>
+                </div>
+                <div>
+                    <div class="brand-name">Domaah Micro:Bit</div>
+                    <div class="brand-ver">VERSION 1.0</div>
+                </div>
+            </div>
+
+            <div class="nav-status">
+                <span class="status-dot" id="navDot"></span>
+                <span id="navStatusText">Terputus</span>
+                <span class="status-time" id="navTime">--:--:--</span>
+            </div>
+
+            <ul class="nav-links" id="navLinks">
+                <li class="active" data-tab="dashboard">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+                    <span>Dashboard</span>
+                </li>
+                <li data-tab="log">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+                    <span>Log</span>
+                </li>
+                <li data-tab="settings">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+                    <span>Setting</span>
+                </li>
+                <li data-tab="help">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 9a3 3 0 0 1 6 1c0 2-3 2.5-3 4"/><path d="M12 17.5h.01"/></svg>
+                    <span>Help</span>
+                </li>
+                <li data-tab="developer">
+                    <svg viewBox="0 0 24 24"><path d="M8 6l-5 6 5 6"/><path d="M16 6l5 6-5 6"/><path d="M13 4l-2 16"/></svg>
+                    <span>Developer</span>
+                </li>
+            </ul>
+
+            <button class="nav-connect" id="connectBtn">Hubungkan Bluetooth</button>
+
+            <a href="index.html" class="nav-home">
+                <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+                Back to Home
+            </a>
+        </nav>
+
+        <main>
+            <!-- DASHBOARD -->
+            <section class="tab-content active" id="tab-dashboard">
+                <div id="dashStart" class="dash-start">
+                    <h1>Start Project</h1>
+                    <p class="sub">Pilih mode untuk memulai kendali</p>
+                    <div class="start-cards">
+                        <div class="pick" onclick="setDashMode('sensor')">
+                            <div class="pick-icon"><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5 8 12 8 12s8-7 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                            <span>Sensor Preview</span>
+                        </div>
+                        <div class="pick" onclick="setDashMode('robot')">
+                            <div class="pick-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M12 7V4"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/></svg></div>
+                            <span>Robot Controller</span>
+                        </div>
+                        <div class="pick" onclick="setDashMode('all')">
+                            <div class="pick-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
+                            <span>All Preview</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dashWork" class="dash-work">
+                    <div class="work-bar">
+                        <h2 id="dashTitle">Mode</h2>
+                        <button class="btn-back" onclick="resetDashboard()">
+                            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                            Kembali
+                        </button>
+                    </div>
+                    <div class="dash-grid">
+                        <div class="card" id="cardSuhu" style="display:none;">
+                            <div class="card-label">Suhu</div>
+                            <div class="card-value" id="valSuhu">-- °C</div>
+                            <div class="chart-wrap"><canvas id="chartSuhu"></canvas></div>
+                        </div>
+                        <div class="card" id="cardKelembaban" style="display:none;">
+                            <div class="card-label">Kelembaban</div>
+                            <div class="card-value" id="valKelembaban">-- %</div>
+                            <div class="chart-wrap"><canvas id="chartKelembaban"></canvas></div>
+                        </div>
+                        <div class="card card-full" id="cardRobot" style="display:none;">
+                            <div class="card-label">Kontrol Arah</div>
+                            <div class="dpad-zone">
+                                <div class="dpad">
+                                    <button class="btn-d btn-up" data-action="up"><svg viewBox="0 0 24 24"><path d="M12 4l8 8h-5v8h-6v-8H4z"/></svg></button>
+                                    <button class="btn-d btn-left" data-action="left"><svg viewBox="0 0 24 24" style="transform:rotate(-90deg)"><path d="M12 4l8 8h-5v8h-6v-8H4z"/></svg></button>
+                                    <button class="btn-d btn-center" data-action="horn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg></button>
+                                    <button class="btn-d btn-right" data-action="right"><svg viewBox="0 0 24 24" style="transform:rotate(90deg)"><path d="M12 4l8 8h-5v8h-6v-8H4z"/></svg></button>
+                                    <button class="btn-d btn-down" data-action="down"><svg viewBox="0 0 24 24" style="transform:rotate(180deg)"><path d="M12 4l8 8h-5v8h-6v-8H4z"/></svg></button>
+                                </div>
+                                <button id="btnToggleState" class="btn-toggle">OFF / CLOSE</button>
+                                <div class="sliders">
+                                    <div class="slider-row">
+                                        <label>Slider 1 <span id="valSlider1">0</span></label>
+                                        <input type="range" min="0" max="180" value="0" oninput="sendCtrl('c',this.value);document.getElementById('valSlider1').innerText=this.value;" />
+                                    </div>
+                                    <div class="slider-row">
+                                        <label>Slider 2 <span id="valSlider2">0</span></label>
+                                        <input type="range" min="0" max="180" value="0" step="5" oninput="sendCtrl('x',this.value);document.getElementById('valSlider2').innerText=this.value;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOG -->
+            <section class="tab-content" id="tab-log">
+                <h2 class="page-title">System Log</h2>
+                <p class="page-sub">Data yang masuk ke program terekam di sini.</p>
+                <div class="toolbar">
+                    <button class="btn-sm danger" onclick="document.getElementById('logBox').innerHTML=''">Clear Log</button>
+                </div>
+                <div class="log-box" id="logBox"></div>
+            </section>
+
+            <!-- SETTINGS -->
+            <section class="tab-content" id="tab-settings">
+                <h2 class="page-title">Pengaturan</h2>
+                <p class="page-sub">Sesuaikan tampilan dan bahasa aplikasi.</p>
+                <div class="settings-group">
+                    <div class="field">
+                        <label>1. Tema</label>
+                        <select id="selTheme" onchange="applySettings()">
+                            <option value="theme-dark">Dark — Hitam Pekat</option>
+                            <option value="theme-light">Light — Putih Bersih</option>
+                            <option value="theme-contrast">High Contrast</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>2. Bahasa</label>
+                        <select id="selLang" onchange="applySettings()">
+                            <option value="id">Indonesia</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HELP -->
+            <section class="tab-content" id="tab-help">
+                <h2 class="page-title">Help & Panduan</h2>
+                <p class="page-sub">Langkah-langkah penggunaan aplikasi.</p>
+                <ul class="help-list">
+                    <li><strong>1.</strong> Pilih project di Dashboard (Sensor / Robot / All).</li>
+                    <li><strong>2.</strong> Hubungkan Micro:bit via Bluetooth (tombol di sidebar).</li>
+                    <li><strong>3.</strong> Gunakan D-pad untuk menggerakkan robot (mode Robot/All).</li>
+                    <li><strong>4.</strong> Data suhu & kelembaban tampil real-time (mode Sensor/All).</li>
+                    <li><strong>5.</strong> Log merekam semua komunikasi data.</li>
+                </ul>
+            </section>
+
+            <!-- DEVELOPER -->
+            <section class="tab-content" id="tab-developer">
+                <h2 class="page-title">Developer</h2>
+                <p class="page-sub">Informasi pengembang aplikasi.</p>
+                <div class="dev-card">
+                    <ul>
+                        <li><strong>Supported by :</strong> <a href="https://domaah.biz.id" target="_blank">Domaah</a></li>
+                        <li><strong>Owner :</strong> <a href="https://muhammadalifalhafidz.vercel.app" target="_blank">Muhammad Alif Alhafidz</a></li>
+                        <li><strong>WhatsApp :</strong> <a href="https://wa.me/628811078080" target="_blank">+62 881-1078-080</a></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        const qs = (s, c = document) => c.querySelector(s);
+        const qsa = (s, c = document) => [...c.querySelectorAll(s)];
+
+        let bleDevice = null, txChar = null, isConnected = false, isConnecting = false;
+        let currentLang = 'id';
+        let chartSuhu, chartKelembaban;
+
+        const UART_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+        const RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+        const TX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+        const DICT = {
+            id: { connected: "Terhubung", disconnected: "Terputus", btn_connect: "Hubungkan Bluetooth", btn_disconnect: "Putuskan Koneksi" },
+            en: { connected: "Connected", disconnected: "Disconnected", btn_connect: "Connect Bluetooth", btn_disconnect: "Disconnect" }
+        };
+
+        /* ---- Loading progress ---- */
+        const loaderMsgs = ["Menyiapkan sistem...", "Memuat komponen...", "Hampir selesai..."];
+        let prog = 0, msgIdx = 0;
+        const loadInt = setInterval(() => {
+            prog = Math.min(100, prog + 4 + Math.random() * 6);
+            $('loaderBar').style.width = prog + '%';
+            $('loaderPercent').textContent = Math.round(prog) + '%';
+            const nextMsg = loaderMsgs[Math.floor(prog / 34)];
+            if (nextMsg && nextMsg !== loaderMsgs[msgIdx]) { msgIdx = Math.floor(prog / 34); $('loaderSub').textContent = nextMsg; }
+            if (prog >= 100) {
+                clearInterval(loadInt);
+                $('loaderSub').textContent = 'Selesai!';
+                setTimeout(() => {
+                    $('loadingOverlay').classList.remove('active');
+                    $('app').classList.add('visible');
+                }, 400);
+            }
+        }, 90);
+
+        /* ---- Log ---- */
+        function sysLog(msg, type = 'sys') {
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            $('logBox').appendChild(div);
+            $('logBox').scrollTop = $('logBox').scrollHeight;
+        }
+
+        /* ---- UART ---- */
+        async function sendUART(data) {
+            if (!txChar) return;
+            try {
+                await txChar.writeValue(new TextEncoder().encode(data + '\n'));
+                sysLog(`TX → ${data}`, 'tx');
+            } catch (e) { sysLog(`TX Error: ${e.message}`, 'err'); }
+        }
+        function sendCtrl(p, v) { sendUART(`${p}${v}`); }
+        window.sendCtrl = sendCtrl;
+
+        /* ---- D-pad ---- */
+        qsa('.btn-d[data-action]').forEach(btn => {
+            const action = btn.dataset.action;
+            btn.addEventListener('pointerdown', e => {
+                e.preventDefault();
+                sendUART(action);
+                if (btn.setPointerCapture) btn.setPointerCapture(e.pointerId);
+            });
+            const stop = e => {
+                sendUART('stop');
+                if (e && e.pointerId != null && btn.hasPointerCapture?.(e.pointerId)) btn.releasePointerCapture(e.pointerId);
+            };
+            btn.addEventListener('pointerup', stop);
+            btn.addEventListener('pointercancel', stop);
+            btn.addEventListener('pointerleave', stop);
+        });
+
+        /* ---- Toggle ---- */
+        let toggleActive = false;
+        $('btnToggleState').addEventListener('click', () => {
+            toggleActive = !toggleActive;
+            $('btnToggleState').classList.toggle('active', toggleActive);
+            $('btnToggleState').textContent = toggleActive ? 'ON / CLICK' : 'OFF / CLOSE';
+            sendUART(toggleActive ? 'click' : 'close');
+        });
+
+        /* ---- Bluetooth ---- */
+        function updateUI(connected) {
+            isConnected = connected;
+            const dict = DICT[currentLang];
+            $('navDot').className = 'status-dot' + (connected ? ' ok' : '');
+            $('navStatusText').textContent = connected ? dict.connected : dict.disconnected;
+            $('headerDot').className = 'status-dot' + (connected ? ' ok' : '');
+            $('headerStatusText').textContent = connected ? 'Online' : 'Offline';
+            $('connectBtn').textContent = connected ? dict.btn_disconnect : dict.btn_connect;
+            $('connectBtn').className = 'nav-connect' + (connected ? ' disconnect' : '');
+        }
+
+        $('connectBtn').addEventListener('click', async () => {
+            if (isConnected) { bleDevice?.gatt.disconnect(); return; }
+            if (isConnecting) return;
+            isConnecting = true;
+            try {
+                $('connText').textContent = 'MENCARI MICRO:BIT';
+                $('connSub').textContent = 'Pastikan Bluetooth aktif';
+                $('connectOverlay').classList.add('active');
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'BBC micro:bit' }],
+                    optionalServices: [UART_SERVICE]
+                });
+                const name = bleDevice.name || 'Micro:bit';
+                $('connText').textContent = 'MENGHUBUNGKAN';
+                $('connSub').textContent = name;
+                bleDevice.addEventListener('gattserverdisconnected', () => {
+                    isConnected = false; txChar = null;
+                    updateUI(false); sysLog('Bluetooth terputus', 'err');
+                });
+                const server = await bleDevice.gatt.connect();
+                const service = await server.getPrimaryService(UART_SERVICE);
+                const rx = await service.getCharacteristic(RX_UUID);
+                await rx.startNotifications();
+                rx.addEventListener('characteristicvaluechanged', e => {
+                    const val = new TextDecoder().decode(e.target.value).trim();
+                    if (!val) return;
+                    sysLog(`RX ← ${val}`, 'rx');
+                    const [key, num] = val.split(':');
+                    const n = parseFloat(num);
+                    if (isNaN(n)) return;
+                    if (key.toLowerCase() === 'suhu') { $('valSuhu').textContent = n + ' °C'; updateChart(chartSuhu, n); }
+                    if (key.toLowerCase() === 'kelembaban') { $('valKelembaban').textContent = n + ' %'; updateChart(chartKelembaban, n); }
+                });
+                txChar = await service.getCharacteristic(TX_UUID);
+                isConnected = true; isConnecting = false;
+                $('connText').textContent = 'TERHUBUNG';
+                $('connSub').textContent = name;
+                setTimeout(() => $('connectOverlay').classList.remove('active'), 700);
+                updateUI(true);
+                sysLog(`Terhubung ke "${name}"`, 'sys');
+            } catch (err) {
+                isConnecting = false;
+                sysLog(`Gagal: ${err.message}`, 'err');
+                $('connText').textContent = 'GAGAL TERHUBUNG';
+                $('connSub').textContent = err.message;
+                setTimeout(() => $('connectOverlay').classList.remove('active'), 2000);
+                updateUI(false);
+            }
+        });
+
+        /* ---- Charts ---- */
+        function makeChart(id, color) {
+            return new Chart($(id), {
+                type: 'line',
+                data: { labels: [], datasets: [{ data: [], borderColor: color, borderWidth: 2.5, tension: 0.4, pointRadius: 0, fill: false }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { ticks: { color: 'rgba(128,128,128,0.8)', font: { size: 9 } }, grid: { color: 'rgba(128,128,128,0.15)' }, border: { display: false } }
+                    }
+                }
+            });
+        }
+        function updateChart(chart, val) {
+            if (!chart) return;
+            chart.data.labels.push('');
+            chart.data.datasets[0].data.push(val);
+            if (chart.data.labels.length > 25) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+            chart.update('none');
+        }
+        chartSuhu = makeChart('chartSuhu', '#0A84FF');
+        chartKelembaban = makeChart('chartKelembaban', '#30D158');
+
+        /* ---- Dashboard modes ---- */
+        window.setDashMode = mode => {
+            $('dashStart').style.display = 'none';
+            $('dashWork').style.display = 'block';
+            $('cardSuhu').style.display = (mode === 'sensor' || mode === 'all') ? '' : 'none';
+            $('cardKelembaban').style.display = (mode === 'sensor' || mode === 'all') ? '' : 'none';
+            $('cardRobot').style.display = (mode === 'robot' || mode === 'all') ? '' : 'none';
+            $('dashTitle').textContent = mode === 'sensor' ? 'Sensor Preview' : mode === 'robot' ? 'Robot Controller' : 'All Preview';
+        };
+        window.resetDashboard = () => {
+            $('dashWork').style.display = 'none';
+            $('dashStart').style.display = 'flex';
+        };
+
+        /* ---- Tabs ---- */
+        function switchTab(id) {
+            qsa('.tab-content').forEach(t => t.classList.remove('active'));
+            qs(`#tab-${id}`).classList.add('active');
+            qsa('.nav-links li').forEach(li => li.classList.toggle('active', li.dataset.tab === id));
+            if (window.innerWidth <= 820) { $('sidebar').classList.remove('open'); $('hamburger').classList.remove('open'); }
+        }
+        qsa('.nav-links li').forEach(li => li.addEventListener('click', () => switchTab(li.dataset.tab)));
+
+        /* ---- Settings ---- */
+        window.applySettings = () => {
+            document.body.className = $('selTheme').value;
+            currentLang = $('selLang').value;
+            localStorage.setItem('domaah-theme', $('selTheme').value);
+            localStorage.setItem('domaah-lang', currentLang);
+            updateUI(isConnected);
+        };
+
+        /* ---- Clock / hamburger ---- */
+        setInterval(() => $('navTime').textContent = new Date().toLocaleTimeString(), 1000);
+        $('hamburger').addEventListener('click', () => {
+            $('sidebar').classList.toggle('open');
+            $('hamburger').classList.toggle('open');
+        });
+        document.addEventListener('click', e => {
+            if (window.innerWidth <= 820 && !$('sidebar').contains(e.target) && !$('hamburger').contains(e.target)) {
+                $('sidebar').classList.remove('open');
+                $('hamburger').classList.remove('open');
+            }
+        });
+
+        /* ---- Init ---- */
+        $('selTheme').value = localStorage.getItem('domaah-theme') || 'theme-dark';
+        $('selLang').value = localStorage.getItem('domaah-lang') || 'id';
+        document.body.className = $('selTheme').value;
+        currentLang = $('selLang').value;
+        updateUI(false);
+    </script>
+</body>
+</html>
